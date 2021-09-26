@@ -4,7 +4,7 @@
 This exercise is done to complete quest#3 in the Questbook, as per the link below. 
 ```
 https://questbook.notion.site/Track-Writing-code-in-Solidity-Begin-Here-0cdfb112506d45c58e72bc3425e8684a
-```
+
 The main features of the smart cryptocurrency bank account are as below:
 
 * *addBalance*: User can deposit amount in ETH to the smart contract which will then be deposited to Compound to earn interest
@@ -17,4 +17,4 @@ The main features of the smart cryptocurrency bank account are as below:
 * *withdraw*: User can withdraw amount in ETH + interest rate earned from Compound. User will specify the amount that they wish to withdraw, and the function will require that the amount that can be withdrawn should be less then the amount deposited + interest earned from Compound.
 
 * *withdrawInERC20*: User can withdraw amount equivalent to ETH + interest rate in any ERC20 token. User will specify the amount that they wish to withdraw and in which ERC20 token. The function will require that the amount that can be withdrawn should be less than the amount deposited + interest earned from Compound.
-```
+
