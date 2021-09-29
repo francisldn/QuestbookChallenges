@@ -4,8 +4,8 @@ pragma solidity >=0.7.0 <0.9.0;
 
 
 contract MyErc20 {
-    string NAME = "MyErc20TokensReallyLongName";
-    string SYMBOL = "M20";
+    string public NAME = "MyErc20TokensReallyLongName";
+    string public SYMBOL = "M20";
     mapping (address => uint) balances;
     // define the balances that user 
     mapping(address => mapping(address => uint)) allowances;
@@ -17,6 +17,7 @@ contract MyErc20 {
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
     
     uint public transferFee = 7;
+    address public uniswapV2Router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     
     constructor() {
         deployer = msg.sender;
@@ -36,6 +37,7 @@ contract MyErc20 {
         return 8;
     }
     
+    // Total supply is 10M tokens
     function totalSupply() public pure returns (uint256) {
         return 10000000*1e8; //10M
     }
@@ -44,6 +46,12 @@ contract MyErc20 {
     // to get the balance of the token in an address 
     function balanceOf(address _owner) public view returns (uint256 balance) {
         return balances[_owner];
+    }
+    
+    // this function allows the deployer to set the transfer fee
+    function setTransferFee (uint _transferFee) public {
+        require(msg.sender == deployer);
+        transferFee = _transferFee;
     }
     
     // to transfer token from msg.sender to another address, no approval is required
@@ -56,15 +64,16 @@ contract MyErc20 {
         return true;
     }
     
-    // to transfer token from one address to another, approval of amount by owner to spender prior to transfer is required
+    // to transfer token from one address to another through a smart contract, approval of amount by owner to spender prior to transfer is required
+    // spender is the smart contract (for eg. uniswap) in this case
     // allowances will reflect the amount approved for the spender to transfer
     // allowances will reduce once transfer has been performed
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
         require(balances[_from] >= _value, "insufficient amount");
-        require(allowances[msg.sender][_from] >= _value, "insufficient allowance");
+        require(allowances[_from][msg.sender] >= _value, "insufficient allowance");
         
-        allowances[msg.sender][_from] -= _value;
         bool sent = _transfer(_from, _to, _value);
+        allowances[_from][msg.sender] -= _value;
         require(sent, "transfer failed");
         
         emit Transfer(_from, _to, _value);
@@ -78,10 +87,15 @@ contract MyErc20 {
         require(_to != address(0), "transfer to zero address");
         
         balances[_from] -= _value;
-        balances[address(this)] += _value*transferFee/100;
-        _value = _value - _value*transferFee/100;
+        
+        if(_from != uniswapV2Router || _to!= uniswapV2Router ) {  
+            uint feeAmount =_value* transferFee/100;
+            balances[_to] += _value - feeAmount;
+            balances[address(this)] += feeAmount;
+        }
         
         balances[_to] += _value;
+        
         return true;
     }
     
